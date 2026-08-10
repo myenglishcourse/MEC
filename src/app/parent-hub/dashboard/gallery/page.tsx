@@ -1,6 +1,5 @@
 "use client";
-
-import { PlayCircle, Image as ImageIcon, Calendar, Tag, ChevronRight, Clock, Filter } from "lucide-react";
+import { Image as ImageIcon, Calendar, Tag, ChevronRight, Clock, Filter } from "lucide-react";
 import { useActiveGalleryItems } from "@/lib/hooks/use-gallery";
 import { useAllClassActivities } from "@/lib/hooks/use-activities";
 import { usePrograms } from "@/lib/hooks/use-programs";
@@ -76,23 +75,8 @@ export default function GalleryMediaPage() {
 
   const rawMediaItems: any[] = [];
   
-  const featuredEvent = events && events.length > 0 ? events[0] : null;
-  if (featuredEvent) {
-    rawMediaItems.push({
-      ...featuredEvent,
-      id: featuredEvent.id,
-      type: "gallery",
-      title: featuredEvent.title,
-      snippet: featuredEvent.description || "Special event highlight from our school.",
-      date: featuredEvent.event_date 
-        ? format(new Date(featuredEvent.event_date), 'MMMM d, yyyy') 
-        : format(new Date(featuredEvent.created_at), 'MMMM d, yyyy'),
-      rawDate: featuredEvent.event_date || featuredEvent.created_at,
-      thumbnail: getImages(featuredEvent.image_url)[0] || "https://images.unsplash.com/photo-1541336032412-2048a678540d?auto=format&fit=crop&q=80&w=1200",
-      tag: t("gallery.specialEvent"),
-      original: featuredEvent
-    });
-  }
+  // Featured events are shown in a separate carousel, so we don't push them to rawMediaItems
+  const featuredEvents = events && events.length > 0 ? events : [];
 
   if (activities) {
     activities.forEach((act: any) => {
@@ -191,24 +175,88 @@ export default function GalleryMediaPage() {
           <p className="text-neutral-500">{t("gallery.checkBack")}</p>
         </div>
       ) : (
-        /* Feed Layout */
-        <div className="grid gap-8 lg:grid-cols-2">
-          {mediaItems.map((item, idx) => (
-            <article 
-              key={`${item.id}-${idx}`} 
-              onClick={() => setSelectedItem(item.original)}
-              className={`group cursor-pointer relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-neutral-50 ${
-                idx === 0 && selectedProgramId === "all" && selectedClassId === "all" ? "lg:col-span-2 lg:flex-row" : ""
-              }`}
-            >
-              {/* Thumbnail */}
-              <div className={`relative overflow-hidden bg-neutral-100 ${idx === 0 && selectedProgramId === "all" && selectedClassId === "all" ? "lg:w-3/5" : "w-full aspect-[4/3] sm:aspect-video"}`}>
-                <img 
-                  src={item.thumbnail} 
-                  alt={item.title} 
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
+        <div className="space-y-8">
+          {featuredEvents.length > 0 && selectedProgramId === "all" && selectedClassId === "all" && (
+            <Carousel className="w-full">
+              <CarouselContent>
+                {featuredEvents.map((evt: any) => {
+                  const thumbnail = getImages(evt.image_url)[0] || "https://images.unsplash.com/photo-1541336032412-2048a678540d?auto=format&fit=crop&q=80&w=1200";
+                  const date = evt.event_date 
+                    ? format(new Date(evt.event_date), 'MMMM d, yyyy') 
+                    : format(new Date(evt.created_at), 'MMMM d, yyyy');
+                  const snippet = evt.description || "Special event highlight from our school.";
+                  
+                  return (
+                    <CarouselItem key={evt.id}>
+                      <article 
+                        onClick={() => setSelectedItem(evt)}
+                        className="group cursor-pointer relative flex flex-col lg:flex-row overflow-hidden rounded-3xl bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-neutral-50"
+                      >
+                        <div className="relative overflow-hidden bg-neutral-100 lg:w-3/5 w-full aspect-[4/3] sm:aspect-video lg:aspect-auto h-full min-h-[300px]">
+                          <img 
+                            src={thumbnail} 
+                            alt={evt.title} 
+                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
+                          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-all duration-300 group-hover:scale-110 group-hover:opacity-100">
+                            <ImageIcon className="h-16 w-16 text-white drop-shadow-lg" strokeWidth={1.5} />
+                          </div>
+                          <div className="absolute left-4 top-4">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-mec-yellow px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-mec-ink shadow-md">
+                              <Tag className="h-3 w-3" /> {t("gallery.specialEvent")}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-1 flex-col justify-center p-6 md:p-8 lg:w-2/5">
+                          <div>
+                            <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-mec-blue">
+                              <Calendar className="h-4 w-4" />
+                              {date}
+                            </div>
+                            <h3 className="font-display font-extrabold text-[#111111] line-clamp-2 text-3xl leading-tight">
+                              {evt.title}
+                            </h3>
+                            <p className="mt-4 text-base leading-relaxed text-neutral-600 line-clamp-3">
+                              {snippet}
+                            </p>
+                          </div>
+                          <div className="mt-6">
+                            <button className="group/btn inline-flex items-center gap-2 font-bold text-mec-blue transition-colors hover:text-blue-800">
+                              {t("gallery.viewGallery")}
+                              <ChevronRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    </CarouselItem>
+                  );
+                })}
+              </CarouselContent>
+              {featuredEvents.length > 1 && (
+                <>
+                  <CarouselPrevious className="left-4 bg-white/80 hover:bg-white text-black border-none shadow-md backdrop-blur-sm h-10 w-10 hidden md:flex" />
+                  <CarouselNext className="right-4 bg-white/80 hover:bg-white text-black border-none shadow-md backdrop-blur-sm h-10 w-10 hidden md:flex" />
+                </>
+              )}
+            </Carousel>
+          )}
+
+          <div className="grid gap-8 lg:grid-cols-2">
+            {mediaItems.map((item, idx) => (
+              <article 
+                key={`${item.id}-${idx}`} 
+                onClick={() => setSelectedItem(item.original)}
+                className="group cursor-pointer relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-neutral-50"
+              >
+                {/* Thumbnail */}
+                <div className="relative overflow-hidden bg-neutral-100 w-full aspect-[4/3] sm:aspect-video">
+                  <img 
+                    src={item.thumbnail} 
+                    alt={item.title} 
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
                 
                 {/* Overlay Icon */}
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-all duration-300 group-hover:scale-110 group-hover:opacity-100">
@@ -224,13 +272,13 @@ export default function GalleryMediaPage() {
               </div>
 
               {/* Content */}
-              <div className={`flex flex-1 flex-col justify-between p-6 md:p-8 ${idx === 0 && selectedProgramId === "all" && selectedClassId === "all" ? "lg:w-2/5 lg:justify-center" : ""}`}>
+              <div className="flex flex-1 flex-col justify-between p-6 md:p-8">
                 <div>
                   <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-mec-blue">
                     <Calendar className="h-4 w-4" />
                     {item.date}
                   </div>
-                  <h3 className={`font-display font-extrabold text-[#111111] line-clamp-2 ${idx === 0 && selectedProgramId === "all" && selectedClassId === "all" ? "text-3xl leading-tight" : "text-2xl"}`}>
+                  <h3 className="font-display font-extrabold text-[#111111] line-clamp-2 text-2xl">
                     {item.title}
                   </h3>
                   <p className="mt-4 text-base leading-relaxed text-neutral-600 line-clamp-3">
@@ -247,6 +295,7 @@ export default function GalleryMediaPage() {
               </div>
             </article>
           ))}
+          </div>
         </div>
       )}
 

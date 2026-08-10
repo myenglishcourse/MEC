@@ -125,6 +125,12 @@ export function StudentDetailDialog({
                               {student.religion?.toLowerCase() || "-"}
                            </span>
                         </div>
+                        <div className="flex flex-col">
+                           <span className="text-xs text-muted-foreground">Student Id</span>
+                           <span className="text-sm font-medium">
+                             {student.student_id_code || "-"}
+                           </span>
+                        </div>
                     </div>
                 </div>
 
@@ -201,12 +207,6 @@ export function StudentDetailDialog({
                            <span className="text-xs text-muted-foreground">Join Since (Bulan & Tahun)</span>
                            <span className="text-sm font-medium">
                              {student.joined_since || "-"}
-                           </span>
-                        </div>
-                        <div className="flex flex-col">
-                           <span className="text-xs text-muted-foreground">Tanggal Bergabung</span>
-                           <span className="text-sm font-medium">
-                             {student.enrollment_date ? format(new Date(student.enrollment_date), "dd MMMM yyyy", { locale: id }) : "-"}
                            </span>
                         </div>
                     </div>

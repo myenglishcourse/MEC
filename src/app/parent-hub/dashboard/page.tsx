@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useActiveGalleryItems } from "@/lib/hooks/use-gallery";
-import { useAllClassActivities } from "@/lib/hooks/use-activities";
 import { GreetingBanner } from "@/components/parent-hub/greeting-banner";
 import { ScheduleCalendar } from "@/components/parent-hub/schedule-calendar";
 import { EventColumns } from "@/components/parent-hub/event-columns";
 import { GalleryGrid } from "@/components/parent-hub/gallery-grid";
-import { Calendar, Tag, AlertTriangle } from "lucide-react";
-import Image from "next/image";
+import { Calendar, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,13 +15,11 @@ import { useRouter } from "next/navigation";
 export default function DashboardHome() {
   const { data: allItems, isLoading } = useActiveGalleryItems("event");
   const items = allItems ?? [];
-  const { data: recentActivitiesData, isLoading: isLoadingActivities } = useAllClassActivities(50);
   const { t } = useLanguage();
   const router = useRouter();
 
   const [showArrearsWarning, setShowArrearsWarning] = useState(false);
   const [session, setSession] = useState<any>(null);
-  const [filteredActivities, setFilteredActivities] = useState<any[]>([]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("parent-hub-session");
@@ -55,27 +51,6 @@ export default function DashboardHome() {
       }
     } catch {}
   }, []);
-
-  useEffect(() => {
-    if (!recentActivitiesData) return;
-    if (!session) {
-      setFilteredActivities(recentActivitiesData.slice(0, 6));
-      return;
-    }
-
-    if (session.type === 'staff') {
-      setFilteredActivities(recentActivitiesData.slice(0, 6));
-    } else {
-      const enrolledProgramIds = session.enrollments?.map((e: any) => e.program_id) || [];
-      const filtered = recentActivitiesData.filter(act => {
-        if (act.category === 'event') return true; 
-        if (act.classes?.program_id) return enrolledProgramIds.includes(act.classes.program_id);
-        if (act.category && enrolledProgramIds.includes(act.category)) return true;
-        return false;
-      });
-      setFilteredActivities(filtered.slice(0, 6));
-    }
-  }, [recentActivitiesData, session]);
 
   return (
     <div className="space-y-8">
@@ -134,18 +109,18 @@ export default function DashboardHome() {
           <p className="text-sm text-neutral-600">{t("dashboard.recentActivitiesDesc")}</p>
         </div>
 
-        {isLoadingActivities ? (
+        {isLoading ? (
           <div className="grid gap-6 md:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-[420px] animate-pulse rounded-3xl bg-white/60" />
             ))}
           </div>
-        ) : filteredActivities.length === 0 ? (
+        ) : items.length === 0 ? (
           <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
             <p className="text-neutral-500">{t("dashboard.noRecentActivities")}</p>
           </div>
         ) : (
-          <GalleryGrid items={filteredActivities as any} />
+          <GalleryGrid items={items.slice(0, 10) as any} />
         )}
       </section>
     </div>

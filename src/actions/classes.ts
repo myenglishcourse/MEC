@@ -12,7 +12,7 @@ export async function getClasses() {
       *,
       class_teachers ( users (id, full_name) ),
       programs:program_id (id, name),
-      class_enrollments ( students (name) )
+      class_enrollments ( students (name, status) )
     `)
     .order('created_at', { ascending: false })
 
@@ -25,6 +25,7 @@ export async function getClasses() {
     const enrollments = c.class_enrollments || [];
     // extract students
     const students = enrollments
+      .filter((e: any) => e.students?.status === 'ACTIVE')
       .map((e: any) => e.students?.name)
       .filter(Boolean);
 
